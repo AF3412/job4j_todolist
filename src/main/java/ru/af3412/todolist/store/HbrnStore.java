@@ -2,13 +2,15 @@ package ru.af3412.todolist.store;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import ru.af3412.todolist.model.Task;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class HbrnStore implements Store, AutoCloseable {
 
@@ -37,51 +39,56 @@ public class HbrnStore implements Store, AutoCloseable {
 
     @Override
     public Task findById(int id) {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
-            Task task = session.get(Task.class, id);
-            session.getTransaction().commit();
-            return task;
-        }
+        return this.tx(session -> session.get(Task.class, id));
     }
 
     @Override
     public Collection<Task> findAllTask() {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
-            List<Task> result = session.createQuery("from ru.af3412.todolist.model.Task").list();
-            session.getTransaction().commit();
-            return result;
-        }
+        return this.tx(session -> session.createQuery("from ru.af3412.todolist.model.Task").list());
     }
 
     @Override
     public Task save(Task task) {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
-            int taskId = (int) session.save(task);
-            session.getTransaction().commit();
-            return findById(taskId);
-        }
+        int taskId = this.tx(session -> (int) session.save(task));
+        return findById(taskId);
     }
 
     @Override
     public Task update(Task task) {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
-            session.update(task);
-            session.getTransaction().commit();
-            return task;
-        }
+        this.vx(session -> session.update(task));
+        return task;
     }
 
     @Override
     public boolean delete(Task task) {
+        this.vx(session -> session.delete(task));
+        return true;
+    }
+
+    private <T> T tx(final Function<Session, T> command) {
         try (Session session = sf.openSession()) {
-            session.beginTransaction();
-            session.delete(task);
-            session.getTransaction().commit();
-            return true;
+            try {
+                Transaction tx = session.beginTransaction();
+                T rsl = command.apply(session);
+                tx.commit();
+                return rsl;
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+                throw e;
+            }
+        }
+    }
+
+    private void vx(final Consumer<Session> command) {
+        try (Session session = sf.openSession()) {
+            try {
+                Transaction tx = session.beginTransaction();
+                command.accept(session);
+                tx.commit();
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+                throw e;
+            }
         }
     }
 }
