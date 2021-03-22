@@ -2,6 +2,7 @@ package ru.af3412.todolist.servlet;
 
 import com.google.gson.Gson;
 import ru.af3412.todolist.model.Task;
+import ru.af3412.todolist.model.User;
 import ru.af3412.todolist.store.HbrnStore;
 import ru.af3412.todolist.store.Store;
 
@@ -21,25 +22,32 @@ public class TasksServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        sendReply(resp, STORE.findAllTask());
+        User user = (User) req.getSession().getAttribute("user");
+        sendReply(resp, STORE.findAllTaskByUser(user));
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Task newTask = getRequestBody(req);
-        sendReply(resp, STORE.save(newTask));
+        User user = (User) req.getSession().getAttribute("user");
+        newTask.setUser(user);
+        sendReply(resp, STORE.saveTask(newTask));
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Task updatedTask = getRequestBody(req);
-        sendReply(resp, STORE.update(updatedTask));
+        User user = (User) req.getSession().getAttribute("user");
+        updatedTask.setUser(user);
+        sendReply(resp, STORE.updateTask(updatedTask));
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Task deletedTask = getRequestBody(req);
-        boolean stat = STORE.delete(deletedTask);
+        User user = (User) req.getSession().getAttribute("user");
+        deletedTask.setUser(user);
+        boolean stat = STORE.deleteTask(deletedTask);
         sendReply(resp, stat);
     }
 

@@ -25,6 +25,7 @@
             <h1 class="text-center">TODO List for job4j.ru</h1>
         </div>
     </div>
+
     <hr />
     <div class="row">
         <div class="col">

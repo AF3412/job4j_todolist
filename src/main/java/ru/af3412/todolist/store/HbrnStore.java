@@ -7,8 +7,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import ru.af3412.todolist.model.Task;
+import ru.af3412.todolist.model.User;
 
+import javax.persistence.Query;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -38,7 +41,7 @@ public class HbrnStore implements Store, AutoCloseable {
     }
 
     @Override
-    public Task findById(int id) {
+    public Task findTaskById(int id) {
         return this.tx(session -> session.get(Task.class, id));
     }
 
@@ -48,21 +51,59 @@ public class HbrnStore implements Store, AutoCloseable {
     }
 
     @Override
-    public Task save(Task task) {
-        int taskId = this.tx(session -> (int) session.save(task));
-        return findById(taskId);
+    public Collection<Task> findAllTaskByUser(User user) {
+        try (Session session = sf.openSession()) {
+            session.beginTransaction();
+            Query query = session.createQuery("from Task where user.id = :user_id");
+            query.setParameter("user_id", user.getId());
+            var list = query.getResultList();
+            session.getTransaction().commit();
+            return list;
+        }
     }
 
     @Override
-    public Task update(Task task) {
+    public Task saveTask(Task task) {
+        int taskId = this.tx(session -> (int) session.save(task));
+        return findTaskById(taskId);
+    }
+
+    @Override
+    public Task updateTask(Task task) {
         this.vx(session -> session.update(task));
         return task;
     }
 
     @Override
-    public boolean delete(Task task) {
+    public boolean deleteTask(Task task) {
         this.vx(session -> session.delete(task));
         return true;
+    }
+
+    @Override
+    public User findUserById(int id) {
+        return this.tx(session -> session.get(User.class, id));
+    }
+
+    @Override
+    public Optional<User> findUserByName(String name) {
+        try (Session session = sf.openSession()) {
+            session.beginTransaction();
+            Query query = session.createQuery("from User where name = :name");
+            query.setParameter("name", name);
+            var list = query.getResultList();
+            if (list.isEmpty()) {
+                return Optional.empty();
+            }
+            session.getTransaction().commit();
+            return Optional.of((User) list.get(0));
+        }
+    }
+
+    @Override
+    public User saveUser(User user) {
+        int taskId = this.tx(session -> (int) session.save(user));
+        return findUserById(taskId);
     }
 
     private <T> T tx(final Function<Session, T> command) {
