@@ -15,3 +15,5 @@ CREATE TABLE IF NOT EXISTS users
 );
 
 ALTER TABLE tasks ADD COLUMN user_id INT REFERENCES users(id);
+
+INSERT INTO categories (name) VALUES ('INBOX'), ('WORK'), ('HOME'), ('SPORT');

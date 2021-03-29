@@ -1,11 +1,15 @@
 package ru.af3412.todolist.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tasks")
-public class Task {
+public class Task implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +20,12 @@ public class Task {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Category> categories = new ArrayList<>();
+
+    public void addCategory(Category category) {
+        this.categories.add(category);
+    }
 
     public int getId() {
         return id;
@@ -57,6 +67,14 @@ public class Task {
         this.user = user;
     }
 
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -66,8 +84,10 @@ public class Task {
 
         if (id != task.id) return false;
         if (done != task.done) return false;
-        if (description != null ? !description.equals(task.description) : task.description != null) return false;
-        return date != null ? date.equals(task.date) : task.date == null;
+        if (!Objects.equals(description, task.description)) return false;
+        if (!Objects.equals(date, task.date)) return false;
+        if (!Objects.equals(user, task.user)) return false;
+        return Objects.equals(categories, task.categories);
     }
 
     @Override
@@ -76,6 +96,8 @@ public class Task {
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (date != null ? date.hashCode() : 0);
         result = 31 * result + (done ? 1 : 0);
+        result = 31 * result + (user != null ? user.hashCode() : 0);
+        result = 31 * result + (categories != null ? categories.hashCode() : 0);
         return result;
     }
 }

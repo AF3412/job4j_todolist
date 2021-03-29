@@ -1,5 +1,6 @@
 package ru.af3412.todolist.store;
 
+import ru.af3412.todolist.model.Category;
 import ru.af3412.todolist.model.Task;
 import ru.af3412.todolist.model.User;
 
@@ -21,4 +22,6 @@ public interface Store {
     Optional<User> findUserByName(String name);
 
     User saveUser(User user);
+
+    Collection<Category> findAllCategories();
 }

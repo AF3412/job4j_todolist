@@ -31,7 +31,8 @@ public class TasksServlet extends HttpServlet {
         Task newTask = getRequestBody(req);
         User user = (User) req.getSession().getAttribute("user");
         newTask.setUser(user);
-        sendReply(resp, STORE.saveTask(newTask));
+        Task task = STORE.saveTask(newTask);
+        sendReply(resp, task);
     }
 
     @Override
