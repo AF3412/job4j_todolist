@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @WebServlet("/tasks")
@@ -31,6 +32,7 @@ public class TasksServlet extends HttpServlet {
         Task newTask = getRequestBody(req);
         User user = (User) req.getSession().getAttribute("user");
         newTask.setUser(user);
+        newTask.setDate(new Date(System.currentTimeMillis()));
         Task task = STORE.saveTask(newTask);
         sendReply(resp, task);
     }
@@ -40,6 +42,7 @@ public class TasksServlet extends HttpServlet {
         Task updatedTask = getRequestBody(req);
         User user = (User) req.getSession().getAttribute("user");
         updatedTask.setUser(user);
+        updatedTask.setDate(new Date(System.currentTimeMillis()));
         sendReply(resp, STORE.updateTask(updatedTask));
     }
 

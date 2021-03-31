@@ -15,6 +15,7 @@ public class Task implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String description;
+    @Temporal(TemporalType.TIMESTAMP)
     private Date date;
     private boolean done;
     @ManyToOne

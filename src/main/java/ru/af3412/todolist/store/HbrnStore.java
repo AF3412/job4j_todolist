@@ -12,6 +12,7 @@ import ru.af3412.todolist.model.User;
 
 import javax.persistence.Query;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -56,15 +57,12 @@ public class HbrnStore implements Store, AutoCloseable {
     }
 
     @Override
-    public Collection<Task> findAllTaskByUser(User user) {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
+    public List<Task> findAllTaskByUser(User user) {
+        return this.tx(session -> {
             Query query = session.createQuery("select distinct t from Task t left join fetch t.categories where t.user.id = :user_id");
             query.setParameter("user_id", user.getId());
-            var list = query.getResultList();
-            session.getTransaction().commit();
-            return list;
-        }
+            return query.getResultList();
+        });
     }
 
     @Override
@@ -92,17 +90,15 @@ public class HbrnStore implements Store, AutoCloseable {
 
     @Override
     public Optional<User> findUserByName(String name) {
-        try (Session session = sf.openSession()) {
-            session.beginTransaction();
+        return this.tx(session -> {
             Query query = session.createQuery("from User where name = :name");
             query.setParameter("name", name);
             var list = query.getResultList();
             if (list.isEmpty()) {
                 return Optional.empty();
             }
-            session.getTransaction().commit();
             return Optional.of((User) list.get(0));
-        }
+        });
     }
 
     @Override
