@@ -114,10 +114,7 @@ public class HbrnStore implements Store, AutoCloseable {
     }
 
     private <T> T tx(final Function<Session, T> command) {
-        try (Session session =
-                     sf.withOptions()
-                             .jdbcTimeZone(TimeZone.getTimeZone("Europe/Moscow"))
-                             .openSession()) {
+        try (Session session = sf.openSession()) {
             try {
                 Transaction tx = session.beginTransaction();
                 T rsl = command.apply(session);
@@ -131,10 +128,7 @@ public class HbrnStore implements Store, AutoCloseable {
     }
 
     private void vx(final Consumer<Session> command) {
-        try (Session session =
-                     sf.withOptions()
-                             .jdbcTimeZone(TimeZone.getTimeZone("Europe/Moscow"))
-                             .openSession()) {
+        try (Session session = sf.openSession()) {
             try {
                 Transaction tx = session.beginTransaction();
                 command.accept(session);
